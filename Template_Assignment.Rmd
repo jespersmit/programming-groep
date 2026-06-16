@@ -16,6 +16,7 @@ install.packages("yaml")
 install.packages("rmarkdown")
 install.packages("janitor")
 install.packages("naniar")
+install.packages("pryr")
 ```
 
 ```{r packages}
