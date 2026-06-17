@@ -1,0 +1,10 @@
+install.packages("tidyverse")
+install.packages("yaml")
+install.packages("rmarkdown")
+install.packages("janitor")
+install.packages("naniar")
+install.packages("pryr")
+install.packages("tinytex")
+install.packages(("ggplot2")
+
+tinytex::install_tinytex() 

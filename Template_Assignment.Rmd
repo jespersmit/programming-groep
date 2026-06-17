@@ -22,6 +22,7 @@ library(rmarkdown)
 library(janitor)
 library(naniar)
 library(tinytex)
+library(ggplot2)
 
 require(tidyverse)
 require(rmarkdown)
@@ -101,6 +102,7 @@ Say we want to include only larger distances (above 2) in our dataset, we can fi
 ghs <- janitor::clean_names(ghs)
 gaq <- janitor::clean_names(gaq)
 
+#voor de goeie data types per colum voor ghs en gaq
 ghs <-
   ghs |>
   mutate(country = as_factor(country),
@@ -203,6 +205,12 @@ result <- result %>%
     disease_per_pollution = population_affected / (abs(total_air_pollution) + 1)
   )
 
+#safe databases
+saveRDS(gaq_country_year, "gaq_country_year.rds")
+saveRDS(ghs_country_year, "ghs_country_year.rds")
+saveRDS(result, "result.rds")
+
+
 
 ```
 
@@ -225,7 +233,7 @@ Waarde >0 meer vervuild dan gemiddeld, waarde = 0 gemiddeld vervuild, waarde 0< 
 Variable 2 en 3
 variabele maak ik eerder al in data cleaning, omdat ik voor data cleaning functies gebruik waar die variabele inzit. dus hier leg ik uit wat ze doen bij data cleaning staat de code aangegven met # welke code het is.  
 
-variabele 2: Disease intesity laat zien dit jaar  het meer of minder getroffen door respiratoire ziektes dan gemiddeld, 1 veel hogere ziekte last, 0 gemiddeld, -1 veel lagere ziekte last.
+variabele 2: Disease intesity laat zien dit jaar  het meer of minder getroffen door respiratoire ziektes dan gemiddeld, 1 veel hogere ziekte last, 0 gemiddeld, -1 veel lagere ziekte last. Het neemt het gemiddelde van alle landen en rijen 
 variabele 3: Disease per population ratio die laat zien hoe de pollution is in vergelijking met aantal diseases laagwaarde=minder ziekte relatief aan pollution, hoge waarde = veel ziekte ondanks lage/medium pollution
 ```{r gen_var2}
 
@@ -237,6 +245,10 @@ variabele 3: Disease per population ratio die laat zien hoe de pollution is in v
 ## 3.3 Visualize temporal variation
 
 ```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
 
 ```
 
