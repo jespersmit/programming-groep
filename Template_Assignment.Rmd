@@ -1,6 +1,6 @@
 ---
-title: "Template"
-author: "Studentnames and studentnumbers here"
+title: "relation between respitory diseases and air pollution"
+author: "Jesper Smit, 2894491"
 date: "`r Sys.Date()`"
 output: pdf_document
 bibliography: references.bib
@@ -11,17 +11,18 @@ csl: apa.csl
 # Set-up your environment
 
 ```{r package_install, include=FALSE}
-install.packages("tidyverse")
-install.packages("yaml")
-install.packages("rmarkdown")
-install.packages("janitor")
-install.packages("naniar")
-install.packages("pryr")
-install.packages("tinytex")
 
 ```
 
 ```{r packages}
+
+library(tidyverse)
+library(yaml)
+library(rmarkdown)
+library(janitor)
+library(naniar)
+library(tinytex)
+
 require(tidyverse)
 require(rmarkdown)
 require(yaml)
@@ -60,20 +61,16 @@ Preferably from a URL, but if not, make sure to download the data and store it i
 #loading the database 
 ghs <- read_csv("ghs.csv")
 gaq <- read_csv("gaq.csv")
-a_fun_name <- read_delim("data/gezondheid.csv")
 
-a_fun_name$...1 <- NULL
-
-
-write_csv(a_fun_name, "data/gezondheid_changed.csv")
 ```
 
 midwest is an example dataset included in the tidyverse package
 
 ## 2.2 Provide a short summary of the dataset(s)
 
+
 ```{r}
-head(dataset)
+#head(dataset)
 ```
 
 In this case we see 28 variables, but we miss some information on what units they are in. We also don't know anything about the year/moment in which this data has been captured.
@@ -116,7 +113,7 @@ ghs <-
   )
 gaq <-
   gaq |>
-  mutate(country = as_factor(country),
+  mutate(country = as_factor(country)
   )
 
 #alleen de rijen met Respiratory als disease_category voor ghs
@@ -164,6 +161,11 @@ ghs_country_year <- ghs_country_year %>%
     urbanization_rate_percent = mean(urbanization_rate_percent, na.rm = TRUE),
     .groups = "drop"
   )
+
+
+
+
+
 #year goeie datatype make in bijde datasets 
 gaq_country_year <- gaq_country_year %>%
   mutate(year = as.numeric(year))
@@ -171,26 +173,7 @@ gaq_country_year <- gaq_country_year %>%
 ghs_country_year <- ghs_country_year %>%
   mutate(year = as.numeric(year))
 
-#alleen de kolommen selecteren die bij elkaar mergen voor gaq
-gaq_clean <- gaq_country_year %>%
-  select(country, year, total_air_pollution)
-#de databases mergen 
-result <- gaq_clean %>%
-  inner_join(ghs_country_year, by = c("country", "year"))
-
-
-
-```
-
-Please use a separate 'R block' of code for each type of cleaning. So, e.g. one for missing values, a new one for removing unnecessary variables etc.
-
-## 3.2 Generate necessary variables
-
-Variable 1
-
-```{r gen_var1}
-#variabele toevoegen total air pollution is een index door de verschillende vervuilinge te standariseren en dan opt te tellen. uiteindelijk komt er een gemiddelde uit die vergeleken is met de vervuiling van alle lande in de dataset 
-# waarde >0 meer vervuild dan gemiddeld, waarde = 0 gemiddeld vervuild, waarde 0< mnder vervuild gemiddeld 
+# variabele 1 bij genererate necessary variables leggen we uit wat ie doet.
 gaq_country_year <- gaq_country_year %>%
   mutate(
     total_air_pollution = rowMeans(scale(select(., pm2_5_ug_m3, pm10_ug_m3,
@@ -203,19 +186,50 @@ gaq_country_year <- gaq_country_year %>%
   )
 
 
-```
 
-Variable 2 en 3
 
-```{r gen_var2}
-# Voegt de 2 onderstaande variabele toe 
-# Disease intesity laat zien dit jaar  het meer of minder getroffen door respiratoire ziektes dan gemiddeld, 1 veel hogere ziekte last, 0 gemiddeld, -1 veel lagere ziekte last.
-# Disease per population ratio die laat zien hoe de pollution is in vergelijking met aantal diseases laagwaarde=minder ziekte relatief aan pollution, hoge waarde = veel ziekte ondanks lage/medium pollution
+
+#alleen de kolommen selecteren die bij elkaar mergen voor gaq
+gaq_clean <- gaq_country_year %>%
+  select(country, year, total_air_pollution)
+#de databases mergen 
+result <- gaq_clean %>%
+  inner_join(ghs_country_year, by = c("country", "year"))
+
+#variabele 2 en 3 bij genererate necessary variables leggen we uit wat ze doen.
 result <- result %>%
   mutate(
     disease_intensity = scale(population_affected),
     disease_per_pollution = population_affected / (abs(total_air_pollution) + 1)
   )
+
+
+```
+
+Please use a separate 'R block' of code for each type of cleaning. So, e.g. one for missing values, a new one for removing unnecessary variables etc.
+
+## 3.2 Generate necessary variables
+
+Variable 1
+
+variabele maak ik eerder al in data cleaning, omdat ik voor data cleaning functies gebruik waar die variabele inzit. dus hier leg ik uit wat ze doen bij data cleaning staat de code aangegven met # welke code het is.
+
+variabele 1: total air pollution is een index door de verschillende vervuilinge te standariseren en dan opt te tellen. uiteindelijk komt er een gemiddelde uit die vergeleken is met de vervuiling van alle lande in de dataset 
+Waarde >0 meer vervuild dan gemiddeld, waarde = 0 gemiddeld vervuild, waarde 0< mnder vervuild gemiddeld.
+
+```{r gen_var1}
+ 
+
+```
+
+Variable 2 en 3
+variabele maak ik eerder al in data cleaning, omdat ik voor data cleaning functies gebruik waar die variabele inzit. dus hier leg ik uit wat ze doen bij data cleaning staat de code aangegven met # welke code het is.  
+
+variabele 2: Disease intesity laat zien dit jaar  het meer of minder getroffen door respiratoire ziektes dan gemiddeld, 1 veel hogere ziekte last, 0 gemiddeld, -1 veel lagere ziekte last.
+variabele 3: Disease per population ratio die laat zien hoe de pollution is in vergelijking met aantal diseases laagwaarde=minder ziekte relatief aan pollution, hoge waarde = veel ziekte ondanks lage/medium pollution
+```{r gen_var2}
+
+
 
 
 ```
@@ -267,10 +281,4 @@ Use APA referencing throughout your document.
 
 
 
-#load database global air quality
-read.delim("global_air_quality_2014_2025.rds")
-#load database global health statistics
-read.delim("Global_Health_Statistics.rds")
-#save datasets
-saveRDS(global_air_quality_2014_2025, "global_air_quality_2014_2025.rds")
-saveRDS(Global_Health_Statistics,"Global_Health_Statistics.rds")
+
