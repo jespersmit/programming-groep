@@ -17,6 +17,8 @@ install.packages("rmarkdown")
 install.packages("janitor")
 install.packages("naniar")
 install.packages("pryr")
+install.packages("tinytex")
+
 ```
 
 ```{r packages}
@@ -55,19 +57,9 @@ Include the following:
 Preferably from a URL, but if not, make sure to download the data and store it in a shared location that you can load the data in from. Do not store the data in a folder you include in the Github repository!
 
 ```{r loading_data}
-#dataset <- midwest
-#load database global air quality
-read.delim("global_air_quality_2014_2025.rds")
-#load database global health statistics
-read.delim("Global_Health_Statistics.rds")
-library(readr)
-#Gezondheid_leefstijl_zorggebruik_en_aanbod_doodsoorzaken_kerncijfers_03062026_132800 <- #read_delim("~/Downloads/Gezondheid__leefstijl__zorggebruik_en__aanbod__doodsoorzaken__kerncijfers_03062026_132800.csv", 
-#    delim = ";", escape_double = FALSE, trim_ws = TRUE, 
-#    skip = 4)
-#View(Gezondheid_leefstijl_zorggebruik_en_aanbod_doodsoorzaken_kerncijfers_03062026_132800)
-
-#write_csv(Gezondheid_leefstijl_zorggebruik_en_aanbod_doodsoorzaken_kerncijfers_03062026_132800, "data/gezondheid.csv")
-
+#loading the database 
+ghs <- read_csv("ghs.csv")
+gaq <- read_csv("gaq.csv")
 a_fun_name <- read_delim("data/gezondheid.csv")
 
 a_fun_name$...1 <- NULL
@@ -109,7 +101,85 @@ Think of things like:
 Say we want to include only larger distances (above 2) in our dataset, we can filter for this.
 
 ```{r data_cleaning}
-mean(dataset$percollege)
+ghs <- janitor::clean_names(ghs)
+gaq <- janitor::clean_names(gaq)
+
+ghs <-
+  ghs |>
+  mutate(country = as_factor(country),
+         gender = as_factor(gender),
+         disease_name = as_factor(disease_name),
+         disease_category  = as_factor(disease_category),
+         age_group  = as_factor(age_group),
+         treatment_type  = as_factor(treatment_type),
+         availability_of_vaccines_treatment  = as_factor(availability_of_vaccines_treatment)
+  )
+gaq <-
+  gaq |>
+  mutate(country = as_factor(country),
+  )
+
+#alleen de rijen met Respiratory als disease_category voor ghs
+ghs <- ghs %>%
+  filter(disease_category == "Respiratory")
+#alleen rijen van 2014 of later voor ghs
+ghs <- ghs %>%
+  filter(year >= 2014)
+#alleen rijen tot 2025 
+ghs <- ghs %>%
+  filter(year >= 2014)
+#verwijderd rijen met landen die niet in beide voorkomen
+ghs <- ghs %>%
+  filter(!country %in% c("Italy", "Canada", "Argentina"))
+gaq <- gaq %>%
+  filter(!country %in% c("Bangladesh", "Egypt", "Ethiopia", "Pakistan", "Phillipines", "Thailand", "Vietnam"))
+
+gaq <- gaq %>% select(-state)
+
+# gegevens van landen bij elkaar zetten dus geen states/provincies meer van global air pollution
+gaq_country_year <- gaq %>%
+  mutate(year = format(date, "%Y")) %>%
+  group_by(country, year) %>%
+  summarise(
+    across(where(is.numeric), ~ mean(.x, na.rm = TRUE)),
+    .groups = "drop"
+  )
+#onnodige kolommen verwijderen van global air pollution
+gaq_country_year <- gaq_country_year %>%
+  select(-c(wind_speed_km_h, humidity_percent, deforestation_rate_percent, aqi))
+#onnodige kolommen verwijderen van global health statistics 
+ghs_country_year <- ghs %>%
+  select(-c(prevalence_rate_percent, age_group, gender, healthcare_access_percent, doctors_per_1000, hospital_beds_per_1000, treatment_type, availability_of_vaccines_treatment, average_treatment_cost_usd, dal_ys, improvement_in_5_years_percent))
+
+# verschillende respiratory diseases van een jaar bij elkaar brengen 
+ghs_country_year <- ghs_country_year %>%
+  group_by(country, year) %>%
+  summarise(
+    population_affected = sum(population_affected, na.rm = TRUE),
+    incidence_rate_percent = mean(incidence_rate_percent, na.rm = TRUE),
+    mortality_rate_percent = mean(mortality_rate_percent, na.rm = TRUE),
+    recovery_rate_percent = mean(recovery_rate_percent, na.rm = TRUE),
+    per_capita_income_usd = mean(per_capita_income_usd, na.rm = TRUE),
+    education_index = mean(education_index, na.rm = TRUE),
+    urbanization_rate_percent = mean(urbanization_rate_percent, na.rm = TRUE),
+    .groups = "drop"
+  )
+#year goeie datatype make in bijde datasets 
+gaq_country_year <- gaq_country_year %>%
+  mutate(year = as.numeric(year))
+
+ghs_country_year <- ghs_country_year %>%
+  mutate(year = as.numeric(year))
+
+#alleen de kolommen selecteren die bij elkaar mergen voor gaq
+gaq_clean <- gaq_country_year %>%
+  select(country, year, total_air_pollution)
+#de databases mergen 
+result <- gaq_clean %>%
+  inner_join(ghs_country_year, by = c("country", "year"))
+
+
+
 ```
 
 Please use a separate 'R block' of code for each type of cleaning. So, e.g. one for missing values, a new one for removing unnecessary variables etc.
@@ -119,12 +189,34 @@ Please use a separate 'R block' of code for each type of cleaning. So, e.g. one 
 Variable 1
 
 ```{r gen_var1}
+#variabele toevoegen total air pollution is een index door de verschillende vervuilinge te standariseren en dan opt te tellen. uiteindelijk komt er een gemiddelde uit die vergeleken is met de vervuiling van alle lande in de dataset 
+# waarde >0 meer vervuild dan gemiddeld, waarde = 0 gemiddeld vervuild, waarde 0< mnder vervuild gemiddeld 
+gaq_country_year <- gaq_country_year %>%
+  mutate(
+    total_air_pollution = rowMeans(scale(select(., pm2_5_ug_m3, pm10_ug_m3,
+                                                no_ug_m3, no2_ug_m3,
+                                                n_ox_ppb, nh3_ug_m3,
+                                                co_mg_m3, so2_ug_m3,
+                                                o3_ug_m3, benzene_ug_m3,
+                                                toluene_ug_m3, xylene_ug_m3)),
+                                   na.rm = TRUE)
+  )
+
 
 ```
 
-Variable 2
+Variable 2 en 3
 
 ```{r gen_var2}
+# Voegt de 2 onderstaande variabele toe 
+# Disease intesity laat zien dit jaar  het meer of minder getroffen door respiratoire ziektes dan gemiddeld, 1 veel hogere ziekte last, 0 gemiddeld, -1 veel lagere ziekte last.
+# Disease per population ratio die laat zien hoe de pollution is in vergelijking met aantal diseases laagwaarde=minder ziekte relatief aan pollution, hoge waarde = veel ziekte ondanks lage/medium pollution
+result <- result %>%
+  mutate(
+    disease_intensity = scale(population_affected),
+    disease_per_pollution = population_affected / (abs(total_air_pollution) + 1)
+  )
+
 
 ```
 
@@ -146,21 +238,6 @@ Here you provide a description of why the plot above is relevant to your specifi
 
 What is the poverty rate by state?
 
-```{r visualise_subpopulations}
-dataset$inmetro <- dataset$inmetro %>% as.factor()
-# Boxplot of poverty rate by state using the 'midwest' dataset
-ggplot(dataset, aes(x = inmetro, y = percadultpoverty)) +
-  geom_boxplot() +
-  labs(
-    title = "Distribution of Poverty Rates by Metropolitan status (Midwest counties)",
-    x = "Metropolitan Area",
-    y = "Poverty Rate of Adults (%)"
-  ) +
-  theme_minimal() +
-  theme(
-    legend.position = "right"
-  )
-```
 
 Here you provide a description of why the plot above is relevant to your specific social problem.
 
