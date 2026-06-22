@@ -133,7 +133,7 @@ ghs <- ghs %>%
 gaq <- gaq %>%
   filter(!country %in% c("Bangladesh", "Egypt", "Ethiopia", "Pakistan", "Phillipines", "Thailand", "Vietnam"))
 
-gaq <- gaq %>% select(-state)
+
 
 # gegevens van landen bij elkaar zetten dus geen states/provincies meer van global air pollution
 gaq_country_year <- gaq %>%
@@ -174,6 +174,20 @@ gaq_country_year <- gaq_country_year %>%
 
 ghs_country_year <- ghs_country_year %>%
   mutate(year = as.numeric(year))
+
+
+#zorgen dat alle namen van de landen in de 2 datasets gelijk zijn 
+ghs_country_year$country <- countrycode(
+  ghs_country_year$country,
+  origin = "country.name",
+  destination = "country.name"
+)
+
+gaq_country_year$country <- countrycode(
+  gaq_country_year$country,
+  origin = "country.name",
+  destination = "country.name"
+)
 
 # variabele 1 bij genererate necessary variables leggen we uit wat ie doet.
 gaq_country_year <- gaq_country_year %>%

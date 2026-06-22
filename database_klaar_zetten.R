@@ -16,6 +16,15 @@ library(rmarkdown)
 library(janitor)
 library(naniar)
 library(tinytex)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+
+install.packages(c("sf", "rnaturalearth", "rnaturalearthdata"))
+
+install.packages("countrycode")
+library(countrycode)
+
 #om te zien welke versie je hebt 
 version
 #name op te schonen en consistent te hebben 
@@ -145,22 +154,69 @@ saveRDS(result, "result.rds")
 vis_miss(ghs) #geen missing data 
 vis_miss(gaq_country_year) # geen missing data 
 
-plot_data <- result %>%
+plot_2024 <- result %>%
   mutate(disease_intensity = disease_intensity[,1]) %>%
+  filter(year == 2024) %>%
+  arrange(desc(total_air_pollution)) %>%
+  slice_head(n = 10) %>%
   pivot_longer(
     cols = c(total_air_pollution, disease_intensity),
     names_to = "type",
     values_to = "index"
-  ) %>%
-  mutate(country_year = paste(country, year))
+  )
 
-print(
-  ggplot(plot_data, aes(x = country_year, y = index, fill = type)) +
-    geom_col(position = "dodge") +
-    labs(x = "Country - Year", y = "Index (-1 to 1)", fill = "Metric") +
-    theme_minimal() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-)
+ggplot(plot_2024, aes(x = reorder(country, index), y = index, fill = type)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  labs(
+    x = "Country",
+    y = "Index (-3 to 3)",
+    fill = "Metric",
+    title = "Top 10 Most Polluted Countries in 2024"
+  ) +
+  theme_minimal()
+
+# Wereldkaart ophalen
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+# Gemiddelde score per land berekenen
+result_country <- result %>%
+  group_by(country) %>%
+  summarise(
+    disease_per_pollution = mean(disease_per_pollution, na.rm = TRUE)
+  )
+
+# Scores opdelen in 5 categorieën
+result_country <- result_country %>%
+  mutate(
+    score = ntile(disease_per_pollution, 5)
+  )
+
+#juiste namen geven 
+result_country$country[result_country$country == "United States"] <- "United States of America"
+
+# Landnamen koppelen aan wereldkaart
+world_data <- world %>%
+  left_join(result_country, by = c("name" = "country"))
+
+# Wereldkaart plotten
+ggplot(world_data) +
+  geom_sf(aes(fill = factor(score)), color = "white", size = 0.1) +
+  scale_fill_manual(
+    values = c(
+      "#ffffcc",  # score 1
+      "#a1dab4",  # score 2
+      "#41b6c4",  # score 3
+      "#2c7fb8",  # score 4
+      "#253494"   # score 5
+    ),
+    name = "Disease Score"
+  ) +
+  labs(
+    title = "Disease per Pollution by Country",
+    subtitle = "Countries divided into 5 score categories"
+  ) +
+  theme_minimal()
 
 
 
