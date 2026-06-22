@@ -133,6 +133,7 @@ ghs <- ghs %>%
 gaq <- gaq %>%
   filter(!country %in% c("Bangladesh", "Egypt", "Ethiopia", "Pakistan", "Phillipines", "Thailand", "Vietnam"))
 
+gaq <- gaq %>% select(-state)
 
 
 # gegevens van landen bij elkaar zetten dus geen states/provincies meer van global air pollution
