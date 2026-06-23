@@ -258,7 +258,18 @@ variabele 3: Disease per population ratio die laat zien hoe de pollution is in v
 ```
 
 ## 3.3 Visualize temporal variation
-
+ggplot(air_year_country,
+       aes(x = Year,
+           y = PM25,
+           color = Country,
+           group = Country)) +
+  geom_line() +
+  labs(
+    title = "PM2.5 Levels Over Time by Country",
+    x = "Year",
+    y = "Average PM2.5 (µg/m³)"
+  ) +
+  theme_minimal()
 ```{r}
 library(dplyr)
 library(tidyr)
