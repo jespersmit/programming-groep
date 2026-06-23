@@ -5,6 +5,7 @@ install.packages("janitor")
 install.packages("naniar")
 install.packages("pryr")
 install.packages("tinytex")
-install.packages(("ggplot2")
+install.packages("ggplot2")
+install.packeges("plotly")
 
 tinytex::install_tinytex() 
