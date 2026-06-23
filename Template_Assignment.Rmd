@@ -1,6 +1,6 @@
 ---
 title: "relation between respitory diseases and air pollution"
-author: "Jesper Smit, 2894491"
+author: "Jesper Smit 2894491, "
 date: "`r Sys.Date()`"
 output: pdf_document
 bibliography: references.bib
@@ -99,10 +99,11 @@ Think of things like:
 Say we want to include only larger distances (above 2) in our dataset, we can filter for this.
 
 ```{r data_cleaning}
+# making sure every name is consitent and correct.
 ghs <- janitor::clean_names(ghs)
 gaq <- janitor::clean_names(gaq)
 
-#voor de goeie data types per colum voor ghs en gaq
+#Using the correct data types per column for ghs and gaq.
 ghs <-
   ghs |>
   mutate(country = as_factor(country),
@@ -118,25 +119,25 @@ gaq <-
   mutate(country = as_factor(country)
   )
 
-#alleen de rijen met Respiratory als disease_category voor ghs
+#deleting other disease_category than respiratory for ghs
 ghs <- ghs %>%
   filter(disease_category == "Respiratory")
-#alleen rijen van 2014 of later voor ghs
+#Only rows from 2014 or later for ghs
 ghs <- ghs %>%
   filter(year >= 2014)
-#alleen rijen tot 2025 
+#Only rows till 2025.
 ghs <- ghs %>%
   filter(year >= 2014)
-#verwijderd rijen met landen die niet in beide voorkomen
+#deleting rows with countries that are not in both datasets.
 ghs <- ghs %>%
   filter(!country %in% c("Italy", "Canada", "Argentina"))
 gaq <- gaq %>%
   filter(!country %in% c("Bangladesh", "Egypt", "Ethiopia", "Pakistan", "Phillipines", "Thailand", "Vietnam"))
 
-gaq <- gaq %>% select(-state)
 
 
-# gegevens van landen bij elkaar zetten dus geen states/provincies meer van global air pollution
+
+#Deleting states and cities, by taking the avarage from them to only have countries.
 gaq_country_year <- gaq %>%
   mutate(year = format(date, "%Y")) %>%
   group_by(country, year) %>%
@@ -144,14 +145,16 @@ gaq_country_year <- gaq %>%
     across(where(is.numeric), ~ mean(.x, na.rm = TRUE)),
     .groups = "drop"
   )
-#onnodige kolommen verwijderen van global air pollution
+gaq <- gaq %>% select(-state)
+
+#Deleting useless variables for gaq 
 gaq_country_year <- gaq_country_year %>%
   select(-c(wind_speed_km_h, humidity_percent, deforestation_rate_percent, aqi))
-#onnodige kolommen verwijderen van global health statistics 
+#Deleting useless variables for ghs.
 ghs_country_year <- ghs %>%
   select(-c(prevalence_rate_percent, age_group, gender, healthcare_access_percent, doctors_per_1000, hospital_beds_per_1000, treatment_type, availability_of_vaccines_treatment, average_treatment_cost_usd, dal_ys, improvement_in_5_years_percent))
 
-# verschillende respiratory diseases van een jaar bij elkaar brengen 
+#Bringing all types off respiratory diseases in a year, to one year.
 ghs_country_year <- ghs_country_year %>%
   group_by(country, year) %>%
   summarise(
@@ -169,7 +172,7 @@ ghs_country_year <- ghs_country_year %>%
 
 
 
-#year goeie datatype make in bijde datasets 
+#Making year the correct datatype for both datasets. 
 gaq_country_year <- gaq_country_year %>%
   mutate(year = as.numeric(year))
 
@@ -177,7 +180,7 @@ ghs_country_year <- ghs_country_year %>%
   mutate(year = as.numeric(year))
 
 
-#zorgen dat alle namen van de landen in de 2 datasets gelijk zijn 
+#Making the names of countries the same in both datasets 
 ghs_country_year$country <- countrycode(
   ghs_country_year$country,
   origin = "country.name",
@@ -190,7 +193,7 @@ gaq_country_year$country <- countrycode(
   destination = "country.name"
 )
 
-# variabele 1 bij genererate necessary variables leggen we uit wat ie doet.
+#Making the first variable. In generate necesarry date we explain all variables. 
 gaq_country_year <- gaq_country_year %>%
   mutate(
     total_air_pollution = rowMeans(scale(select(., pm2_5_ug_m3, pm10_ug_m3,
@@ -206,21 +209,21 @@ gaq_country_year <- gaq_country_year %>%
 
 
 
-#alleen de kolommen selecteren die bij elkaar mergen voor gaq
+#Selecting only the variables that we want to merge for the merged dataset
 gaq_clean <- gaq_country_year %>%
   select(country, year, total_air_pollution)
-#de databases mergen 
+#Merging the datasets
 result <- gaq_clean %>%
   inner_join(ghs_country_year, by = c("country", "year"))
 
-#variabele 2 en 3 bij genererate necessary variables leggen we uit wat ze doen.
+#Making variables 2 and 3. In generate necesarry date we explain all variables  
 result <- result %>%
   mutate(
     disease_intensity = scale(population_affected),
     disease_per_pollution = population_affected / (abs(total_air_pollution) + 1)
   )
 
-#safe databases
+#saving datasets 
 saveRDS(gaq_country_year, "gaq_country_year.rds")
 saveRDS(ghs_country_year, "ghs_country_year.rds")
 saveRDS(result, "result.rds")
@@ -235,10 +238,11 @@ Please use a separate 'R block' of code for each type of cleaning. So, e.g. one 
 
 Variable 1
 
-variabele maak ik eerder al in data cleaning, omdat ik voor data cleaning functies gebruik waar die variabele inzit. dus hier leg ik uit wat ze doen bij data cleaning staat de code aangegven met # welke code het is.
+I already create the variable in data cleaning, because I use functions for data cleaning that contain that variable. So here I explain what they do; in data cleaning, the code is indicated with # to show which code it is.
 
-variabele 1: total air pollution is een index door de verschillende vervuilinge te standariseren en dan opt te tellen. uiteindelijk komt er een gemiddelde uit die vergeleken is met de vervuiling van alle lande in de dataset 
-Waarde >0 meer vervuild dan gemiddeld, waarde = 0 gemiddeld vervuild, waarde 0< mnder vervuild gemiddeld.
+Variable 1: Total air pollution is an index created by standardising the different pollutants and then summing them. Ultimately, an average is obtained that is compared to the pollution of all countries in the merged dataset.
+
+Value >0: more polluted than average, value = 0: moderately polluted, value 0<: less polluted on average.
 
 ```{r gen_var1}
  
@@ -246,10 +250,11 @@ Waarde >0 meer vervuild dan gemiddeld, waarde = 0 gemiddeld vervuild, waarde 0< 
 ```
 
 Variable 2 en 3
-variabele maak ik eerder al in data cleaning, omdat ik voor data cleaning functies gebruik waar die variabele inzit. dus hier leg ik uit wat ze doen bij data cleaning staat de code aangegven met # welke code het is.  
+I already create the variable in data cleaning, because I use functions for data cleaning that contain that variable. So here I explain what they do; in data cleaning, the code is indicated with # to show which code it is.
 
-variabele 2: Disease intesity laat zien dit jaar  het meer of minder getroffen door respiratoire ziektes dan gemiddeld, 1 veel hogere ziekte last, 0 gemiddeld, -1 veel lagere ziekte last. Het neemt het gemiddelde van alle landen en rijen 
-variabele 3: Disease per population ratio die laat zien hoe de pollution is in vergelijking met aantal diseases laagwaarde=minder ziekte relatief aan pollution, hoge waarde = veel ziekte ondanks lage/medium pollution
+Variable 2: Disease intensity shows whether people are affected by respiratory diseases more or less than average this year: 1 = much higher disease burden, 0 = average, -1 = much lower disease burden. It takes the average of all countries and rows.
+
+Variable 3: Disease per population ratio, which shows how pollution compares to the number of diseases. Low value = fewer disease cases relative to pollution; high value = a lot of disease cases despite low/medium pollution.
 ```{r gen_var2}
 
 
