@@ -6,7 +6,6 @@ date: "`r format(Sys.Date(), '%d %B %Y')`"
 output:
   pdf_document: default
   word_document: default
-  always_allow_html: true
 bibliography: references.bib
 csl: apa.csl
 ---
@@ -39,7 +38,6 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(ggrepel)
 library(countrycode)
-library(plotly)
 library(dplyr)
 ```
 
@@ -277,69 +275,56 @@ ggplot(gaq_country_year_clean,
 
 ```
 
-
+This plot is very useful to see who has the higher pollution. With that we can compare with 3.4 and 3.5 if there is a relation. It also help to understand where the outliers are. We can see that India, China and Nigeria have by far the most pollution in the discussion make the link with the respiratory disease.  
 
 
 
 ## 3.4 Visualize spatial variation
 
 ```{r}
-# Data
-data <- gaq_country_year
-names(data) <- make.names(names(data))
-
-pm25_country <- data %>%
-  group_by(country) %>%
-  summarise(PM2.5 = mean(pm2_5_ug_m3, na.rm = TRUE))
-
-# World map
+# Wereldkaart ophalen
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
-# Merge
-map_data <- world %>%
-  left_join(pm25_country, by = c("name" = "country"))
-
-# only countries with data
-map_data <- map_data %>% filter(!is.na(PM2.5))
-
-# Centroid per country
-centroids <- st_centroid(map_data)
-
-coords <- st_coordinates(centroids)
-centroids$lon <- coords[,1]
-centroids$lat <- coords[,2]
-
-# Plotly point cards 
-fig <- plot_ly(
-  data = centroids,
-  lon = ~lon,
-  lat = ~lat,
-  type = "scattergeo",
-  mode = "markers",
-  marker = list(
-    size = 6,
-    color = ~PM2.5,
-    colorscale = "Viridis",
-    reversescale = FALSE,
-    colorbar = list(title = "PM2.5")
-  ),
-  text = ~paste("Land:", name, "<br>PM2.5:", PM2.5),
-  hoverinfo = "text"
-) %>%
-  layout(
-    title = "Interactieve Wereldkaart PM2.5 (gemiddelde 2014–2025)",
-    geo = list(
-      projection = list(type = "natural earth"),
-      showland = TRUE,
-      landcolor = "rgb(230, 230, 230)",
-      showcountries = TRUE,
-      countrycolor = "rgb(200, 200, 200)"
-    )
+# Gemiddelde score per land berekenen
+result_country <- result %>%
+  group_by(country) %>%
+  summarise(
+    disease_per_pollution = mean(disease_per_pollution, na.rm = TRUE)
   )
 
-fig
-```
+# Scores opdelen in 5 categorieën
+result_country <- result_country %>%
+  mutate(
+    score = ntile(disease_per_pollution, 5)
+  )
 
+#juiste namen geven 
+result_country$country[result_country$country == "United States"] <- "United States of America"
+
+# Landnamen koppelen aan wereldkaart
+world_data <- world %>%
+  left_join(result_country, by = c("name" = "country"))
+
+# Wereldkaart plotten
+ggplot(world_data) +
+  geom_sf(aes(fill = factor(score)), color = "white", size = 0.1) +
+  scale_fill_manual(
+    values = c(
+      "#ffffcc",  # score 1
+      "#a1dab4",  # score 2
+      "#41b6c4",  # score 3
+      "#2c7fb8",  # score 4
+      "#253494"   # score 5
+    ),
+    name = "Disease Score"
+  ) +
+  labs(
+    title = "Disease per Pollution by Country",
+    subtitle = "Countries divided into 5 score categories"
+  ) +
+  theme_minimal()
+```
+This is map is very useful to see when higher pollution does not mean a higher respiratory disease. It helps us understand where the outliers are of the relation and makes us think why that is. Brazil has a high score and India and Nigeria a low score. The score is made with the disease per Pollution variable.  
 ## 3.5 Visualize sub-population variation
 
 
@@ -380,6 +365,8 @@ In this graph, you can see an interesting effect after the covid pandemic. You c
 # Part 4 - Discussion
 
 ## 4.1 Discuss your findings
+
+Our findings are interesting to say the least. When you see in the time graph(3.3) India, China and Nigeria are the most polluted. When you look at their disease intensity(plot 3.5) , India and China are low, and Nigeria is high on the list of disease intensity. This would not suggest a relation between air pollution and respiratory diseases, but you should realise that India and China have more than 1 billion people as residents. It could be that not every case of respiratory disease is discovered because of the huge size of the population. Russia, Mexico and Indonesia are next on the air pollution list, which Russia is the highest disease intensity, and Indonesia is 6th. These are averages as Nigeria has the highest in variability( farthest line in 3.5), and India also has a high variability in higher or lower disease intensity, while Mexico has a really high on the variability line. From this, you can conclude that higher air pollution most of the time means more respiratory disease cases. You can see in the of 3.4 when that is not the case Spending more money on respiratory diseases can work, as we see when COVID came, there were higher budgets for healthcare, which resulted in lower  respitatory disease intensity. Spending less time outside also helps reduce the intensity of lower respiratory disease.
 
 # Part 5 - Reproducibility
 
