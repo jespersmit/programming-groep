@@ -6,6 +6,7 @@ date: "`r format(Sys.Date(), '%d %B %Y')`"
 output:
   pdf_document: default
   word_document: default
+  always_allow_html: true
 bibliography: references.bib
 csl: apa.csl
 ---
@@ -153,30 +154,17 @@ gaq_country_year <- gaq_country_year %>%
                    "deforestation_rate_percent",
                    "aqi")))
 
-#Deleting useless variables for ghs.
-ghs_country_year <- ghs %>%
-  group_by(country, year) %>%
-  summarise(
-    population_affected = sum(population_affected, na.rm = TRUE),
-    incidence_rate_percent = mean(.data$incidence_rate_percent, na.rm = TRUE),
-    mortality_rate_percent = mean(.data$mortality_rate_percent, na.rm = TRUE),
-    recovery_rate_percent = mean(.data$recovery_rate_percent, na.rm = TRUE),
-    per_capita_income_usd = mean(.data$per_capita_income_usd, na.rm = TRUE),
-    education_index = mean(.data$education_index, na.rm = TRUE),
-    urbanization_rate_percent = mean(.data$urbanization_rate_percent, na.rm = TRUE),
-    .groups = "drop"
-  )
 
 #Making year the correct datatype for both datasets. 
 gaq_country_year <- gaq_country_year %>%
   mutate(year = as.numeric(year))
 
-ghs_country_year <- ghs_country_year %>%
+ghs<- ghs %>%
   mutate(year = as.numeric(year))
 
 #Making the names of countries the same in both datasets 
-ghs_country_year$country <- countrycode::countrycode(
-  ghs_country_year$country,
+ghs$country <- countrycode::countrycode(
+  ghs$country,
   origin = "country.name",
   destination = "country.name"
 )
@@ -209,7 +197,7 @@ gaq_clean <- gaq_country_year %>%
 
 #Merging the datasets
 result <- gaq_clean %>%
-  inner_join(ghs_country_year, by = c("country", "year"))
+  inner_join(ghs, by = c("country", "year"))
 
 #Making variables 2 and 3. In generate necesarry date we explain all variables  
 result <- result %>%
@@ -220,7 +208,7 @@ result <- result %>%
 
 #saving datasets 
 saveRDS(gaq_country_year, "gaq_country_year.rds")
-saveRDS(ghs_country_year, "ghs_country_year.rds")
+saveRDS(ghs, "ghs_country_year.rds")
 saveRDS(result, "result.rds")
 
 
