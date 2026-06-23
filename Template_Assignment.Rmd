@@ -277,10 +277,22 @@ Here you provide a description of why the plot above is relevant to your specifi
 
 ## 3.5 Visualize sub-population variation
 
-What is the poverty rate by state?
+
+```{r}
+#box plot
+ggplot(result, aes(x = reorder(country, disease_intensity, median),
+                   y = disease_intensity)) +
+  geom_boxplot() +
+  coord_flip() +
+  labs(
+    title = "Disease intensity by country",
+    x = "Country",
+    y = "Disease intensity"
+  )
+```
 
 
-Here you provide a description of why the plot above is relevant to your specific social problem.
+The boxplot reveals a high difference in disease intensity across countries. Russia and South Africa have a high median (the black lines in the boxes) compared with other countries; this suggests a higher disease burden than in other countries. Variability differs across countries, with some having a more unstable disease intensity (as seen by the size of the box). There are some outliers suggesting extreme spikes in disease intensity ( indicated by the dots), which may be temporary shocks or faults in the measurements. The results show a high variability between countries. 
 
 ## 3.6 Event analysis
 

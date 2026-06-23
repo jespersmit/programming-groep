@@ -219,6 +219,27 @@ ggplot(world_data) +
   theme_minimal()
 
 
+# event plot
+ggplot(result,
+       aes(year,
+           disease_intensity,
+           color = country)) +
+  geom_line() +
+  geom_vline(xintercept = 2020,
+             linetype = "dashed") +
+  labs(title = "Disease intensity before and after COVID-19")
+
+
+#box plot 
+ggplot(result, aes(x = reorder(country, disease_intensity, median),
+                   y = disease_intensity)) +
+  geom_boxplot() +
+  coord_flip() +
+  labs(
+    title = "Disease intensity by country",
+    x = "Country",
+    y = "Disease intensity"
+  )
 
 
 names(result)
