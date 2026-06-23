@@ -40,17 +40,11 @@ Include the tutorial group number
 
 Include your tutorial lecturer's name
 
-# Part 1 - Identify a Social Problem
-
-Use APA referencing throughout your document. [Here's a link to some explanation.](https://www.mendeley.com/guides/apa-citation-guide/)
+# Part 1 - Identify a Social problem
 
 ## 1.1 Describe the Social Problem
 
-Include the following:
-
--   Why is this relevant? [@smith2020]
-
--   ...
+Air pollution is the biggest current environmental health risk in the European Union, according to the European Environment Agency. The main risk of air pollution is respiratory disease, diseases like asthma or COPD. Each year, over 8 million people die from respiratory diseases (UT Health-San Antonio and South Texas Veterans Health Care System, 2021). In this paper, the relation between the severity of the air pollution and the frequency of respiratory disease is researched. 
 
 # Part 2 - Data Sourcing
 
@@ -274,10 +268,66 @@ library(ggplot2)
 
 ## 3.4 Visualize spatial variation
 
-```{r visualise_map}
+library(dplyr)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(sf)
+library(plotly)
 
-```
+# Data
+data <- global_air_quality_2014_2025
+names(data) <- make.names(names(data))
 
+pm25_country <- data %>%
+  group_by(Country) %>%
+  summarise(PM2.5 = mean(PM2.5..ug.m3., na.rm = TRUE))
+
+# Wereldkaart
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+# Merge
+map_data <- world %>%
+  left_join(pm25_country, by = c("name" = "Country"))
+
+# Alleen landen met data
+map_data <- map_data %>% filter(!is.na(PM2.5))
+
+# Centroid per land
+centroids <- st_centroid(map_data)
+
+coords <- st_coordinates(centroids)
+centroids$lon <- coords[,1]
+centroids$lat <- coords[,2]
+
+# Plotly puntenkaart
+fig <- plot_ly(
+  data = centroids,
+  lon = ~lon,
+  lat = ~lat,
+  type = "scattergeo",
+  mode = "markers",
+  marker = list(
+    size = 6,
+    color = ~PM2.5,
+    colorscale = "Viridis",
+    reversescale = FALSE,
+    colorbar = list(title = "PM2.5")
+  ),
+  text = ~paste("Land:", name, "<br>PM2.5:", PM2.5),
+  hoverinfo = "text"
+) %>%
+  layout(
+    title = "Interactieve Wereldkaart PM2.5 (gemiddelde 2014–2025)",
+    geo = list(
+      projection = list(type = "natural earth"),
+      showland = TRUE,
+      landcolor = "rgb(230, 230, 230)",
+      showcountries = TRUE,
+      countrycolor = "rgb(200, 200, 200)"
+    )
+  )
+
+fig
 Here you provide a description of why the plot above is relevant to your specific social problem.
 
 ## 3.5 Visualize sub-population variation
@@ -321,7 +371,11 @@ Provide the link to your PUBLIC repository here: ...
 
 ## 5.2 Reference list
 
-Use APA referencing throughout your document.
+European Environment Agency. (2024, January 25). Air pollution. Www.eea.europa.eu. https://www.eea.europa.eu/en/topics/in-depth/air-pollution
+‌
+
+Levine, S., Marciniuk, D., Aglan, A., Celedón, J., Fong, K., Horsburgh, R., Malhotra, A., Masekela, R., Mortimer, K., Redde, H., Rice, M., & Simonds, A. (n.d.). UT Health-San Antonio and South Texas Veterans Health Care System. https://firsnet.org/wp-content/uploads/2025/01/FIRS_Master_09202021.pdf
+
 
 
 
