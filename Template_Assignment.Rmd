@@ -1,7 +1,7 @@
 ---
 title: "relation between respitory diseases and air pollution"
-author: "Jesper Smit 2894491, "
-date: "`r Sys.Date()`"
+author: "Jesper Smit 2894491, Karsten Leene, Romano van Beek 2861686, Owen Wehrmeijer 2898459, Floris Hemink 2896884"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
 output: pdf_document
 bibliography: references.bib
 csl: apa.csl
@@ -16,30 +16,16 @@ csl: apa.csl
 
 ```{r packages}
 
-library(tidyverse)
-library(yaml)
-library(rmarkdown)
-library(janitor)
-library(naniar)
-library(tinytex)
-library(ggplot2)
 
-require(tidyverse)
-require(rmarkdown)
-require(yaml)
-library(tidyr)
-library(writexl)
-library(readxl)
 ```
 
 # Title Page
-A new sentence
-Include your names
+The relastion between respiratory diseases
 
-Include the tutorial group number
 
-Include your tutorial lecturer's name
-
+Group 2.2 
+ 
+Fatima Amankour
 # Part 1 - Identify a Social problem
 
 ## 1.1 Describe the Social Problem
@@ -50,7 +36,6 @@ Air pollution is the biggest current environmental health risk in the European U
 
 ## 2.1 Load in the data
 
-Preferably from a URL, but if not, make sure to download the data and store it in a shared location that you can load the data in from. Do not store the data in a folder you include in the Github repository!
 
 ```{r loading_data}
 #loading the database 
@@ -59,7 +44,7 @@ gaq <- read_csv("gaq.csv")
 
 ```
 
-midwest is an example dataset included in the tidyverse package
+
 
 ## 2.2 Provide a short summary of the dataset(s)
 
@@ -68,21 +53,20 @@ midwest is an example dataset included in the tidyverse package
 #head(dataset)
 ```
 
-In this case we see 28 variables, but we miss some information on what units they are in. We also don't know anything about the year/moment in which this data has been captured.
+We have picked the information From 2 datasets the ghs(general health statistics) and gaq(general air quality). GHS is a datasets that is made by a Student at National Engineering College in India and gaq is made by a Student at N.S.T from India. Both used data from credible source like the World Health Organization. 
+Gaq includes information about air pollution from 24 countries. Ghs includes information about diffrent types of air pollution from 20 countries. 
 
 ``` r
 inline_code = TRUE
 ```
 
-These are things that are usually included in the metadata of the dataset. For your project, you need to provide us with the information from your metadata that we need to understand your dataset of choice.
 
 ## 2.3 Describe the type of variables included
 
-Think of things like:
+The type of variables in ghs are countries, year, disease name, disease category, prevalence rate, incidence rate, mortality rate, age group, gender, population affected, recovery rate and others about the health care in the countries. The data types are mostly double floating point numbers and the ones where there is no zero value are factors.
 
--   Do the variables contain health information or SES information?
+The type of varibles in gaq are country, year, dates, aiq bucket, all the pollution vales, deforestation rates .The data types are mostly double floating point numbers and the ones where there is no zero value are factors. 
 
--   Have they been measured by interviewing individuals or is the data coming from administrative sources?
 
 *For the sake of this example, I will continue with the assignment...*
 
@@ -90,7 +74,7 @@ Think of things like:
 
 ## 3.1 Data cleaning
 
-Say we want to include only larger distances (above 2) in our dataset, we can filter for this.
+For the data cleaning, we made sure that all the names are consistent and correct. used the correct datatypes per column of both datasets. For the ghs dataset, we deleted the other disease category's than respiratory. deleted years and countries that are not in both datasets. We deleted states and cities in the gaq dataset. We deleted columns that are not useful in the datasets. Brought all types of respiratory diseases in a year together. made the names of countries consistent in both datasets. At last, we selected all columns that we wanted to merge together and merged them.   
 
 ```{r data_cleaning}
 # making sure every name is consitent and correct.
@@ -141,7 +125,7 @@ gaq_country_year <- gaq %>%
   )
 gaq <- gaq %>% select(-state)
 
-#Deleting useless variables for gaq 
+#Deleting useless columns for gaq 
 gaq_country_year <- gaq_country_year %>%
   select(-c(wind_speed_km_h, humidity_percent, deforestation_rate_percent, aqi))
 #Deleting useless variables for ghs.
@@ -257,60 +241,70 @@ Variable 3: Disease per population ratio, which shows how pollution compares to 
 ```
 
 ## 3.3 Visualize temporal variation
-ggplot(air_year_country,
-       aes(x = Year,
-           y = PM25,
-           color = Country,
-           group = Country)) +
-  geom_line() +
-  labs(
-    title = "PM2.5 Levels Over Time by Country",
-    x = "Year",
-    y = "Average PM2.5 (µg/m³)"
-  ) +
-  theme_minimal()
+
 ```{r}
-library(dplyr)
-library(tidyr)
-library(ggplot2)
+# data opschonen
+gaq_country_year_clean <- gaq_country_year %>%
+  filter(!is.na(pm2_5_ug_m3), !is.na(year))
+
+# last points per country
+last_points <- gaq_country_year_clean %>%
+  group_by(country) %>%
+  filter(year == max(year)) %>%
+  ungroup()
+
+# plot
+ggplot(gaq_country_year_clean,
+       aes(x = year,
+           y = pm2_5_ug_m3,
+           color = country,
+           group = country)) +
+  geom_line(linewidth = 0.6) +
+  geom_text_repel(data = last_points,
+                  aes(label = country),
+                  size = 3,
+                  nudge_x = 0.5,
+                  show.legend = FALSE) +
+  scale_color_viridis_d() +
+  theme_minimal() +
+  theme(legend.position = "none")
 
 
 ```
 
+
+
+
+
 ## 3.4 Visualize spatial variation
 
-library(dplyr)
-library(rnaturalearth)
-library(rnaturalearthdata)
-library(sf)
-library(plotly)
-
+```{r}
 # Data
-data <- global_air_quality_2014_2025
+data <- gaq_country_year
 names(data) <- make.names(names(data))
 
 pm25_country <- data %>%
-  group_by(Country) %>%
-  summarise(PM2.5 = mean(PM2.5..ug.m3., na.rm = TRUE))
+  group_by(country) %>%
+  summarise(PM2.5 = mean(pm2_5_ug_m3, na.rm = TRUE))
 
-# Wereldkaart
+# World map
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
 # Merge
 map_data <- world %>%
-  left_join(pm25_country, by = c("name" = "Country"))
+  left_join(pm25_country, by = c("name" = "country"))
 
-# Alleen landen met data
+# only countries with data
 map_data <- map_data %>% filter(!is.na(PM2.5))
 
-# Centroid per land
+# Centroid per country
 centroids <- st_centroid(map_data)
 
 coords <- st_coordinates(centroids)
 centroids$lon <- coords[,1]
 centroids$lat <- coords[,2]
 
-# Plotly puntenkaart
+# Plotly point cards 
 fig <- plot_ly(
   data = centroids,
   lon = ~lon,
@@ -339,7 +333,7 @@ fig <- plot_ly(
   )
 
 fig
-Here you provide a description of why the plot above is relevant to your specific social problem.
+```
 
 ## 3.5 Visualize sub-population variation
 
@@ -365,10 +359,18 @@ The boxplot reveals a high difference in disease intensity across countries. Rus
 Analyze the relationship between two variables.
 
 ```{r analysis}
-
+# event plot
+ggplot(result,
+       aes(year,
+           disease_intensity,
+           color = country)) +
+  geom_line() +
+  geom_vline(xintercept = 2020,
+             linetype = "dashed") +
+  labs(title = "Disease intensity before and after COVID-19")
 ```
 
-Here you provide a description of why the plot above is relevant to your specific social problem.
+In this graph, you can see an interesting effect after the covid pandemic. You can see that in the COVID pandemic and afterwards, the disease intensity is lower than before. This may seem odd, after all it is a respiratory disease, but this can be because a lot of people stopped working and stayed at home, so they would not be exposed to a lot of pollution. Another reason can be that there were fewer people working, so there could be less output. You can see in the graph from 3.3 that there was a big drop in pollution in some countries, notably India and China. So that is interesting to see. We cannot draw further conclusions per country because it is hard to see which line is from which country.
 
 # Part 4 - Discussion
 
@@ -386,6 +388,10 @@ European Environment Agency. (2024, January 25). Air pollution. Www.eea.europa.e
 ‌
 
 Levine, S., Marciniuk, D., Aglan, A., Celedón, J., Fong, K., Horsburgh, R., Malhotra, A., Masekela, R., Mortimer, K., Redde, H., Rice, M., & Simonds, A. (n.d.). UT Health-San Antonio and South Texas Veterans Health Care System. https://firsnet.org/wp-content/uploads/2025/01/FIRS_Master_09202021.pdf
+
+Malaiarasugraj. (z.d.). Global health statistics [Dataset]. Kaggle. https://www.kaggle.com/datasets/malaiarasugraj/global-health-statistics
+
+ashyou09. (z.d.). World air pollution and AQI dataset (2014–2025) [Dataset]. Kaggle. https://www.kaggle.com/datasets/ashyou09/world-air-pollution-and-aqi-dataset-2014-2025/data
 
 
 

@@ -19,9 +19,12 @@ library(tinytex)
 library(sf)
 library(rnaturalearth)
 library(rnaturalearthdata)
+library(ggrepel)
+
+
 
 install.packages(c("sf", "rnaturalearth", "rnaturalearthdata"))
-
+install.packages("ggrepel")
 install.packages("countrycode")
 library(countrycode)
 
@@ -295,9 +298,39 @@ fig <- plot_ly(
   )
 
 
+# data opschonen
+gaq_country_year_clean <- gaq_country_year %>%
+  filter(!is.na(pm2_5_ug_m3), !is.na(year))
+
+# laatste punten per land
+last_points <- gaq_country_year_clean %>%
+  group_by(country) %>%
+  filter(year == max(year)) %>%
+  ungroup()
+
+# plot
+ggplot(gaq_country_year_clean,
+       aes(x = year,
+           y = pm2_5_ug_m3,
+           color = country,
+           group = country)) +
+  geom_line(linewidth = 0.6) +
+  geom_text_repel(data = last_points,
+                  aes(label = country),
+                  size = 3,
+                  nudge_x = 0.5,
+                  show.legend = FALSE) +
+  scale_color_viridis_d() +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+
+
 names(result)
 head(result)
 
 names(gaq)
 head(gaq)
+
+glimpse(ghs)
 
