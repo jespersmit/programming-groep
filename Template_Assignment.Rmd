@@ -1,6 +1,6 @@
 ---
 title: "relation between respitory diseases and air pollution"
-author: "Jesper Smit 2894491, Karsten Leene 2885730, Romano van Beek 2861686, Owen Wehrmeijer 2898459, Floris Hemink 2896884"
+author: "Jesper Smit 2894491, Karsten Leene, Romano van Beek 2861686, Owen Wehrmeijer 2898459, Floris Hemink 2896884"
 date: "`r format(Sys.Date(), '%d %B %Y')`"
 output: pdf_document
 bibliography: references.bib
@@ -30,7 +30,7 @@ Fatima Amankour
 
 ## 1.1 Describe the Social Problem
 
-Air pollution is the biggest current environmental health risk in the European Union, according to the European Environment Agency. The main risk of air pollution is respiratory disease, diseases like asthma or COPD. Each year, over 8 million people die from respiratory diseases (UT Health-San Antonio and South Texas Veterans Health Care System, 2021). In this paper, the relation between the severity of the air pollution and the frequency of respiratory disease is researched. (European Environment Agency, z.d.)
+Air pollution is the biggest current environmental health risk in the European Union, according to the European Environment Agency. The main risk of air pollution is respiratory disease, diseases like asthma or COPD. Each year, over 8 million people die from respiratory diseases (UT Health-San Antonio and South Texas Veterans Health Care System, 2021). In this paper, the relation between the severity of the air pollution and the frequency of respiratory disease is researched. 
 
 # Part 2 - Data Sourcing
 
@@ -214,10 +214,11 @@ Please use a separate 'R block' of code for each type of cleaning. So, e.g. one 
 
 ## 3.2 Generate necessary variables
 
+Variable 1
 
-I already created the variables during data cleaning, as I use functions that include this variable. The relevant code sections are marked with '#' in the data cleaning script to indicate where the variable is used.
+I already create the variable in data cleaning, because I use functions for data cleaning that contain that variable. So here I explain what they do; in data cleaning, the code is indicated with # to show which code it is.
 
-Variable 1: Total air pollution is an index made by standardising pollutant values and summing them. The average is then compared to all countries in the merged dataset.
+Variable 1: Total air pollution is an index created by standardising the different pollutants and then summing them. Ultimately, an average is obtained that is compared to the pollution of all countries in the merged dataset.
 
 Value >0: more polluted than average, value = 0: moderately polluted, value 0<: less polluted on average.
 
@@ -227,7 +228,7 @@ Value >0: more polluted than average, value = 0: moderately polluted, value 0<: 
 ```
 
 Variable 2 en 3
-I already created the variable in data cleaning, because I use functions for data cleaning that contain that variable. So here I explain what they do; in data cleaning, the code is indicated with # to show which code it is.
+I already create the variable in data cleaning, because I use functions for data cleaning that contain that variable. So here I explain what they do; in data cleaning, the code is indicated with # to show which code it is.
 
 Variable 2: Disease intensity shows whether people are affected by respiratory diseases more or less than average this year: 1 = much higher disease burden, 0 = average, -1 = much lower disease burden. It takes the average of all countries and rows.
 
@@ -333,9 +334,6 @@ fig <- plot_ly(
 
 fig
 ```
-The interactive map is really useful because when you hover over each point on the map you can see the pollution value for a country. This makes it easier to compare pollution in regions.The interactive map has some problems though.The map shows the pollution for each country, which can be misleading. This is because some countries have areas with high pollution and areas with very low pollution.For example big countries can have cities with a lot of pollution and rural areas that're much cleaner.You cannot see these differences on the interactive map. The spatial visualization reveals clear regional differences in air pollution levels. Countries in South and East Asia generally show higher PM2.5 concentrations than countries in Europe, North America, and Oceania. Several African countries also display relatively high pollution levels. These patterns are consistent with differences in industrial activity and urbanization level.
-
-
 
 ## 3.5 Visualize sub-population variation
 
@@ -354,7 +352,7 @@ ggplot(result, aes(x = reorder(country, disease_intensity, median),
 ```
 
 
-The boxplot reveals a high difference in disease intensity across countries. Russia and South Africa have a high median (the black lines in the boxes) compared with other countries; this suggests a higher disease burden than in other countries. Variability differs across countries, with some having a more unstable disease intensity (as seen by the size of the box). There are some outliers suggesting extreme spikes in disease intensity ( indicated by the dots), which may be temporary shocks or faults in the measurements. The results show a high variability between countries. Nigeria is third on the disease intesity index which gives a clearer relation. 
+The boxplot reveals a high difference in disease intensity across countries. Russia and South Africa have a high median (the black lines in the boxes) compared with other countries; this suggests a higher disease burden than in other countries. Variability differs across countries, with some having a more unstable disease intensity (as seen by the size of the box). There are some outliers suggesting extreme spikes in disease intensity ( indicated by the dots), which may be temporary shocks or faults in the measurements. The results show a high variability between countries. 
 
 ## 3.6 Event analysis
 
@@ -378,9 +376,6 @@ In this graph, you can see an interesting effect after the covid pandemic. You c
 
 ## 4.1 Discuss your findings
 
-Our findings are interesting to say the least. When you see the map(3.4) and the time graph(3.3) India, China and Nigeria are the most polluted. When you look at their disease intensity(plot 3.5) , India and China are low, and Nigeria is high on the list of disease intensity. This would not suggest a relation between air pollution and respiratory diseases, but you should realise that India and China have more than 1 billion people as residents. It could be that not every case of respiratory disease is discovered because of the huge size of the population. Russia, Mexico and Indonesia are next on the air pollution list, which Russia is the highest disease intensity, and Indonesia is 6th. These are averages as Nigeria has the highest in variability( farthest line in 3.5), and India also has a high variability in higher or lower disease intensity, while Mexico has a really high on the variability line. From this, you can conclude that higher air pollution most of the time means more respiratory disease cases. 
-Spending more money on respiratory diseases can work, as we see when COVID came, there were higher budgets for healthcare, which resulted in lower  respitatory disease intensity. Spending less time outside also helps reduce the intensity of lower respiratory disease.(De Foo et al., 2023)  
-
 # Part 5 - Reproducibility
 
 ## 5.1 Github repository link
@@ -398,7 +393,7 @@ Malaiarasugraj. (z.d.). Global health statistics [Dataset]. Kaggle. https://www.
 
 ashyou09. (z.d.). World air pollution and AQI dataset (2014–2025) [Dataset]. Kaggle. https://www.kaggle.com/datasets/ashyou09/world-air-pollution-and-aqi-dataset-2014-2025/data
 
-De Foo, C., Verma, M., Tan, S. Y., Hamer, J., van der Mark, N., Pholpark, A., Hanvoravongchai, P., Cheh, P. L. J., Marthias, T., Mahendradhata, Y., Putri, L. P., Hafidz, F., Giang, K. B., Khuc, T. H. H., Van Minh, H., Wu, S., Caamal-Olvera, C. G., Orive, G., Wang, H., Nachuk, S., Lim, J., de Oliveira Cruz, V., Yates, R., & Legido-Quigley, H. (2023). Health financing policies during the COVID-19 pandemic and implications for universal health care: A case study of 15 countries. The Lancet Global Health, 11(12), e1964–e1977. https://doi.org/10.1016/S2214-109X(23)00448-5
+
 
 
 
